@@ -299,13 +299,13 @@ changed: [server] => {"changed": true, "cmd": ["whoami"], "delta": "0:00:00.0029
 
 So the `remote_user` instruction works; we are in fact `admini` on the
 server. But what if we wanted to run a command that requires sudo? In
-that case, we simply add the `sudo: yes` option, with the playbook
+that case, we simply add the `become: yes` option, with the playbook
 now looking like this:
 
 ```yml
 - hosts: server
   remote_user: admini
-  sudo: yes
+  become: yes
   tasks:
     - name: Print the actual user
       command: whoami
@@ -318,8 +318,8 @@ TASK: [Print the actual user] *************************************************
 changed: [server] => {"changed": true, "cmd": ["whoami"], "delta": "0:00:00.001985", "end": "2015-03-21 20:56:51.932011", "rc": 0, "start": "2015-03-21 20:56:51.930026", "stderr": "", "stdout": "root"}
 ```
 
-The default user which Ansible sudo's as is, understandably,
-root. This can be changed, though, with the `sudo_user` instruction.
+The default user which Ansible becomes is, understandably,
+root. This can be changed, though, with the `become_user` instruction.
 
 Supplying the user in each and every playbook can be cumbersome and
 error-prone if you have many of them, so Ansible offers an easy way to
@@ -366,7 +366,7 @@ playbook that does all of these
 
 ```yml
 - hosts: server
-  sudo: yes
+  become: yes
   tasks:
 
     - name: Update apt cache
@@ -428,18 +428,18 @@ rolls. Here is how `roles/packages/tasks/main.yml` looks:
 
 ```yml
 - name: Update apt cache
-  sudo: true
+  become: true
   apt: update_cache=yes
 
 - name: Ensure all required locales are present
   locale_gen: name="en_US.UTF-8" state=present
 
 - name: set locale to UTF-8
-  sudo: true
+  become: true
   command: /usr/sbin/update-locale LANG="en_US.UTF-8" LC_ALL="en_US.UTF-8" LANGUAGE="en_US.UTF-8"
 
 - name: Install required packages
-  sudo: true
+  become: true
   apt: pkg={{ item }}
   with_items:
     - nginx
@@ -650,7 +650,7 @@ in a role directory, and should have the following format:
 
 ```yml
 - name: restart postgres
-  sudo: yes
+  become: yes
   service: name=postgresql state=restarted
 ```
 
@@ -659,7 +659,7 @@ This handler can then be referenced from a role in the `notify` field:
 ```yml
 - name: Postgres access
   copy: src=pg_hba.conf dest=/etc/postgresql/9.1/main/pg_hba.conf owner=postgres backup=yes
-  sudo: yes
+  become: yes
   notify:
     - restart postgres
 ```
